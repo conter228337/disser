@@ -23,6 +23,7 @@
 | `default_events` | Текстовое описание событий | e-disclosure | только для аудита, не входной признак |
 | `default_12m`, `default_24m` | Будущий жесткий дефолт | `temporal_targets.py` | `1/0`; `None` при правом цензурировании |
 | `default_12m_observed`, `default_24m_observed` | Полнота горизонта | `temporal_targets.py` | 1 — горизонт завершен |
+| `default_technical_12m`, `default_technical_24m` | Дополнительный исход: жесткий или технический дефолт | `temporal_targets.py` при `--include-technical-target` | отдельная robustness-спецификация |
 | `rating_target` | Понижение рейтинга за 12 месяцев | `temporal_targets.py` | `1/0/None` |
 | `rating_observed` | Полнота рейтингового горизонта | `temporal_targets.py` | 1 — горизонт завершен |
 | `feature_cutoff_date` | Последняя дата допустимых входов | дата публикации | все признаки должны быть доступны не позднее даты |

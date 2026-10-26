@@ -9,7 +9,13 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from model_evaluation import average_precision, brier_score, evaluate_default_predictions, roc_auc
+from model_evaluation import (
+    average_precision,
+    brier_score,
+    evaluate_default_predictions,
+    paired_bootstrap_metric_differences,
+    roc_auc,
+)
 from temporal_targets import (
     add_point_in_time_targets,
     assert_no_lookahead,
@@ -78,6 +84,16 @@ class TargetTests(unittest.TestCase):
         self.assertEqual(same_day["target"], 0)
         self.assertEqual(technical["target"], 0)
 
+    def test_optional_technical_target_is_separate_from_hard_target(self):
+        rows = [{"inn": "001", "publication_date": "2023-04-01"}]
+        defaults = {"001": [{"pub_date": "2023-06-01", "stage": "technical", "kind": "bond"}]}
+        panel = add_point_in_time_targets(
+            rows, default_events_by_inn=defaults, censoring_date="2026-01-01",
+            include_technical_target=True,
+        )
+        self.assertEqual(panel[0]["default_12m"], 0)
+        self.assertEqual(panel[0]["default_technical_12m"], 1)
+
     def test_right_censoring_does_not_become_zero(self):
         result = build_default_target("2024-06-01", [], 24, censoring_date="2025-01-01")
         self.assertIsNone(result["target"])
@@ -123,6 +139,15 @@ class MetricTests(unittest.TestCase):
         self.assertAlmostEqual(brier_score([0, 1], [0.0, 1.0]), 0.0)
         self.assertIsNone(roc_auc([0, 0], [0.1, 0.2]))
         self.assertEqual(evaluate_default_predictions(y, p)["n"], 4)
+
+    def test_paired_bootstrap_uses_same_rows_and_emitters(self):
+        result = paired_bootstrap_metric_differences(
+            [0, 1, 0, 1], [0.1, 0.6, 0.3, 0.7], [0.2, 0.8, 0.2, 0.9],
+            ["a", "a", "b", "b"], repetitions=5, seed=42,
+        )
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["contrast"], "second_model_minus_first_model")
+        self.assertEqual(result["intervals"]["pr_auc"]["valid_replicates"], 5)
 
 
 class DateTests(unittest.TestCase):

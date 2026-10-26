@@ -61,6 +61,7 @@ def build_panel(
     rating_events_by_inn: Mapping[str, list[Mapping[str, Any]]] | None = None,
     censoring_date: Any | None = None,
     use_ocr: bool = True,
+    include_technical_target: bool = False,
 ) -> list[dict[str, Any]]:
     enriched = enrich_documents(rows, use_ocr=use_ocr)
     panel = add_point_in_time_targets(
@@ -68,6 +69,7 @@ def build_panel(
         default_events_by_inn=default_events_by_inn,
         rating_events_by_inn=rating_events_by_inn,
         censoring_date=censoring_date,
+        include_technical_target=include_technical_target,
     )
     assert_no_lookahead(panel)
     return panel
@@ -80,11 +82,13 @@ def build_from_csv(
     rating_events_json: str | Path | None = None,
     censoring_date: Any | None = None,
     use_ocr: bool = True,
+    include_technical_target: bool = False,
 ) -> list[dict[str, Any]]:
     rows = _read_rows(input_csv)
     defaults = json.loads(Path(default_events_json).read_text(encoding="utf-8")) if default_events_json else {}
     ratings = json.loads(Path(rating_events_json).read_text(encoding="utf-8")) if rating_events_json else {}
-    panel = build_panel(rows, defaults, ratings, censoring_date=censoring_date, use_ocr=use_ocr)
+    panel = build_panel(rows, defaults, ratings, censoring_date=censoring_date, use_ocr=use_ocr,
+                        include_technical_target=include_technical_target)
     _write_rows(output_csv, panel)
     return panel
 
@@ -98,6 +102,8 @@ if __name__ == "__main__":
     parser.add_argument("--rating-events-json")
     parser.add_argument("--censoring-date", default=date.today().isoformat())
     parser.add_argument("--no-ocr", action="store_true")
+    parser.add_argument("--include-technical-target", action="store_true")
     args = parser.parse_args()
     build_from_csv(args.input_csv, args.output_csv, args.default_events_json, args.rating_events_json,
-                   args.censoring_date, use_ocr=not args.no_ocr)
+                   args.censoring_date, use_ocr=not args.no_ocr,
+                   include_technical_target=args.include_technical_target)

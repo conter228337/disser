@@ -163,6 +163,7 @@ def add_point_in_time_targets(
     default_events_by_inn: Mapping[str, Iterable[Mapping[str, Any]]] | None = None,
     rating_events_by_inn: Mapping[str, Iterable[Mapping[str, Any]]] | None = None,
     censoring_date: Any | None = None,
+    include_technical_target: bool = False,
 ) -> list[dict[str, Any]]:
     """Обогатить строки панели метками 12/24 месяцев и проверить доступность дат."""
     defaults = default_events_by_inn or {}
@@ -181,6 +182,14 @@ def add_point_in_time_targets(
             rec[f"default_{months}m_observed"] = target["observed"]
             rec[f"default_{months}m_event_date"] = target["event_date"]
             rec[f"default_{months}m_reason"] = target["reason"]
+            if include_technical_target:
+                technical_target = build_default_target(
+                    publication, events, months, censoring_date=censoring_date, hard_only=False,
+                )
+                rec[f"default_technical_{months}m"] = technical_target["target"]
+                rec[f"default_technical_{months}m_observed"] = technical_target["observed"]
+                rec[f"default_technical_{months}m_event_date"] = technical_target["event_date"]
+                rec[f"default_technical_{months}m_reason"] = technical_target["reason"]
         rating_target = build_rating_target(publication, rec.get("rating"), ratings.get(inn, []), censoring_date=censoring_date)
         rec.update(rating_target)
         out.append(rec)
