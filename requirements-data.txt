@@ -1,0 +1,8 @@
+pandas>=2.0
+numpy>=1.24
+pyarrow>=14.0
+huggingface_hub>=0.20
+requests>=2.31
+playwright>=1.40
+beautifulsoup4>=4.12
+curl_cffi>=0.5
